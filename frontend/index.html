@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intelligent Blood Bank: use the oldest blood first</title>
+<meta name="description" content="Track donors, blood stock and hospital requests. The oldest unit goes out first, from the nearest bank.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="landing.css">
+</head>
+<body class="land">
+<div class="wrap">
+  <div class="top"><a class="brand" href="/"><span class="drop"></span>Blood Bank</a><a class="btn" href="app.html">Open dashboard</a></div>
+
+  <section class="hero">
+    <div>
+      <h1>Every unit of blood used before it expires.</h1>
+      <p>Register donors, track stock across banks, and answer hospital requests in seconds. The oldest unit leaves first, from the nearest bank.</p>
+      <div class="cta"><a class="btn" href="app.html">Open dashboard</a><a class="btn ghost" href="#how">See how a request works</a></div>
+    </div>
+    <div class="live" aria-live="polite">
+      <h2><span>Units in stock right now</span><span id="total"></span></h2>
+      <div class="tiles" id="tiles"></div>
+      <p id="liveNote">Loading stock...</p>
+    </div>
+  </section>
+
+  <section class="sec" id="how">
+    <h2>What happens when a hospital asks for blood</h2>
+    <p class="lead">Try it in the dashboard under Emergency request. Each step runs on the server in milliseconds.</p>
+    <ol class="steps">
+      <li><h3>Hospital asks</h3><p>For example 3 units of O+ red cells for City Hospital.</p></li>
+      <li><h3>Nearest banks found</h3><p>Banks are ranked by road distance from the hospital.</p></li>
+      <li><h3>Oldest unit goes first</h3><p>Inside each bank, the unit closest to expiry is issued before newer ones.</p></li>
+      <li><h3>Route and arrival time</h3><p>You see the delivery path, distance and estimated minutes.</p></li>
+    </ol>
+  </section>
+
+  <section class="sec">
+    <h2>Built to stay fast as records grow</h2>
+    <p class="lead">Three data structures from the Data Structures and Algorithms course do the heavy lifting.</p>
+    <div class="cols">
+      <div class="col"><h3>Quick record lookup</h3><p>An AVL tree keeps donors and units sorted and balanced, so any record is found in a handful of steps instead of scanning the whole list.</p><small>Used for: donor and unit search</small></div>
+      <div class="col"><h3>Oldest-first issuing</h3><p>A min-heap orders every blood type and component by expiry date, so wastage drops and near-expiry stock is flagged early.</p><small>Used for: issuing and expiry report</small></div>
+      <div class="col"><h3>Nearest bank and route</h3><p>Blood banks, donation camps and hospitals form a graph. Dijkstra's algorithm finds the shortest delivery route.</p><small>Used for: requests and the network map</small></div>
+    </div>
+  </section>
+
+  <section class="sec" style="border:0;padding-bottom:0">
+    <div class="band"><h2>Run a request on the demo data</h2><a class="btn" href="app.html">Open dashboard</a></div>
+  </section>
+  <footer>Yash Tiwari, B.Tech CSE, NIET. Project-based learning for Data Structures and Algorithms II. Supports SDG 3, Good Health and Well-being.</footer>
+</div>
+<script>
+(async () => {
+  const tiles = document.getElementById('tiles'), note = document.getElementById('liveNote');
+  try {
+    const d = await (await fetch('/api/summary')).json();
+    const types = Object.keys(d.stock), sum = t => Object.values(d.stock[t]).reduce((a, b) => a + b, 0);
+    const counts = types.map(sum), max = Math.max(...counts, 1);
+    const near = {}; d.nearExpiry.forEach(u => (near[u.type] = (near[u.type] || 0) + 1));
+    tiles.innerHTML = types.map((t, i) => `<div class="tile"><div class="fill" data-h="${Math.max(8, (counts[i] / max) * 100)}"></div><span>${t}</span><b>${counts[i]}</b>${near[t] ? '<i title="Units expiring within 7 days">expiring</i>' : ''}</div>`).join('');
+    document.getElementById('total').textContent = d.totals.available + ' units';
+    note.innerHTML = `<em>Amber dot</em> means some units of that type expire within 7 days. ${d.totals.nearExpiry} units need to go out soon.`;
+    requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.fill').forEach(f => (f.style.height = f.dataset.h + '%'))));
+  } catch (e) { note.textContent = 'Start the backend (npm start) to see live stock here.'; }
+})();
+</script>
+</body>
+</html>

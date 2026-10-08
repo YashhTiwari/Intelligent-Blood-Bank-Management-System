@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intelligent Blood Bank Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<aside class="side">
+  <a class="brand" href="/"><span class="drop"></span>Blood Bank</a>
+  <nav id="tabs">
+    <button data-tab="dash" class="active">Dashboard</button>
+    <button data-tab="donors">Donors</button>
+    <button data-tab="inv">Inventory</button>
+    <button data-tab="req">Emergency request</button>
+    <button data-tab="net">Network</button>
+  </nav>
+  <a class="back" href="/">Back to home</a>
+</aside>
+<div class="content">
+<h1 id="pageTitle">Dashboard</h1>
+<div id="toast"></div>
+<main>
+
+<section id="dash" class="tab active">
+  <div class="cards" id="cards"></div>
+  <div class="grid2">
+    <div class="panel"><h2>Stock by blood type &amp; component</h2><div class="scroll"><table id="stockTbl"></table></div></div>
+    <div class="panel"><h2>Near-expiry units (≤ 7 days) <small>heap sort</small></h2><div class="scroll" style="max-height:300px"><table id="nearTbl"></table></div></div>
+  </div>
+  <div class="panel"><h2>Activity log</h2><ul id="log"></ul></div>
+</section>
+
+<section id="donors" class="tab">
+  <div class="grid2">
+    <div class="panel">
+      <h2>Register donor</h2>
+      <div class="form">
+        <input id="dName" placeholder="Full name">
+        <input id="dAge" type="number" placeholder="Age (18-65)">
+        <select id="dType"></select>
+        <input id="dPhone" placeholder="Phone">
+        <input id="dCity" placeholder="City">
+        <button class="primary" onclick="addDonor()">Register</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Record donation</h2>
+      <div class="form">
+        <input id="dnId" placeholder="Donor ID (e.g. D-001)">
+        <select id="dnComp"></select>
+        <select id="dnBank"></select>
+        <button class="primary" onclick="donate()">Donate</button>
+      </div>
+      <h2 style="margin-top:18px">Lookup donor <small>AVL search</small></h2>
+      <div class="form"><input id="dqId" placeholder="Donor ID"><button onclick="lookupDonor()">Search</button></div>
+      <p id="dqOut" class="note"></p>
+    </div>
+  </div>
+  <div class="panel"><h2>All donors <small>in-order traversal of AVL tree</small></h2><div class="scroll"><table id="donorTbl"></table></div></div>
+</section>
+
+<section id="inv" class="tab">
+  <div class="panel">
+    <h2>Lookup unit <small>AVL search</small></h2>
+    <div class="form"><input id="uqId" placeholder="Unit ID (e.g. U-0010)"><button onclick="lookupUnit()">Search</button></div>
+    <p id="uqOut" class="note"></p>
+  </div>
+  <div class="panel">
+    <h2>All units <small>sorted by unit ID</small></h2>
+    <div class="form">
+      <select id="fType"><option value="">All types</option></select>
+      <select id="fComp"><option value="">All components</option></select>
+      <select id="fStatus"><option value="">All status</option><option>AVAILABLE</option><option>ISSUED</option><option>EXPIRED</option></select>
+    </div>
+    <div class="scroll" style="max-height:480px"><table id="unitTbl"></table></div>
+  </div>
+</section>
+
+<section id="req" class="tab">
+  <div class="panel">
+    <h2>Hospital blood request</h2>
+    <p class="note">Nearest blood banks are found with Dijkstra. Units are issued oldest-expiry-first (FEFO min-heap).</p>
+    <div class="form">
+      <select id="rHosp"></select>
+      <select id="rType"></select>
+      <select id="rComp"></select>
+      <input id="rQty" type="number" min="1" max="20" value="2">
+      <button class="primary" onclick="sendRequest()">Request</button>
+    </div>
+  </div>
+  <div class="panel" id="reqOut" style="display:none"></div>
+</section>
+
+<section id="net" class="tab">
+  <div class="grid2">
+    <div class="panel">
+      <h2>Distribution network</h2>
+      <svg id="svg" viewBox="0 0 650 410"></svg>
+      <div class="legend"><span class="dot bank"></span>Blood bank <span class="dot centre"></span>Donation camp <span class="dot hospital"></span>Hospital</div>
+    </div>
+    <div class="panel">
+      <h2>Shortest route <small>Dijkstra</small></h2>
+      <div class="form"><select id="rtFrom"></select><select id="rtTo"></select><button onclick="findRoute()">Find</button></div>
+      <p id="rtOut" class="note"></p>
+      <h2 style="margin-top:18px">Matrix vs list</h2>
+      <p id="netStats" class="note"></p>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h2>Adjacency matrix (km)</h2><div class="scroll"><table id="matTbl" class="mat"></table></div></div>
+    <div class="panel"><h2>Adjacency list</h2><div class="scroll"><table id="listTbl"></table></div></div>
+  </div>
+</section>
+
+</main>
+</div></div>
+<script src="app.js"></script>
+</body>
+</html>
